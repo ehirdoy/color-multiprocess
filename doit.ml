@@ -1,49 +1,21 @@
-#! /usr/bin/env ocaml
+open Lwt.Infix
 
-#use "topfind"
-#require "unix"
+let proc rep tic =
+  let cmdstr = " ./tic" in
+  let cmdstr = " REP=" ^ (string_of_int rep) ^ cmdstr in
+  let cmdstr = " TIC=" ^ (string_of_int tic) ^ cmdstr in
+  let cmdarr = Lwt_process.shell cmdstr in
+  let pr = Lwt_process.open_process_in cmdarr in
+  let rec loop () =
+    if false then Lwt.return_unit else
+      let ic = pr#stdout in
+      Lwt_io.read_line ic >>= fun s ->
+      Lwt_io.printl s >>= fun () -> loop ()
+  in
+  loop ()
 
-type color =
-  | Red
-  | Green
-  | Yellow
-  | Blue
-  | Magenta
-  | Cyan
-
-let colors = [
-  Red;
-  Green;
-  Yellow;
-  Blue;
-  Magenta;
-  Cyan;
-]
-
-let encode_color = function
-  | Red     -> "\027[31m"
-  | Green   -> "\027[32m"
-  | Yellow  -> "\027[33m"
-  | Blue    -> "\027[34m"
-  | Magenta -> "\027[35m"
-  | Cyan    -> "\027[36m"
-
-let colorful = ref true
-
-let paint c s =
-  match !colorful with
-  | true  -> (encode_color c) ^ s ^ "\027[0m"
-  | false -> s
-
-let pr c s =
-  Printf.printf "%s\n" (paint Red s);
-  flush stdout
-
-let _ =
-  let ic = Unix.open_process_in "./tic" in
-  try
-    while true do
-      pr Red (input_line ic)
-    done
-  with
-    End_of_file -> close_in ic;
+let () =
+  Lwt_main.run (Lwt.join [
+      proc 5 3;
+      proc 9 1;
+    ])
