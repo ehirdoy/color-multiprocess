@@ -1,3 +1,9 @@
+#! /usr/bin/env ocaml
+
+#topfind
+#require "unix"
+#require "lwt"
+
 open Lwt.Infix
 
 let proc rep tic =
